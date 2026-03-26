@@ -7,7 +7,6 @@ from dotenv import load_dotenv
 load_dotenv()
 
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY") fallback to streamlit secrets for cloud
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 if not GOOGLE_API_KEY:
     try:
         GOOGLE_API_KEY = st.secrets.get("GOOGLE_API_KEY")
