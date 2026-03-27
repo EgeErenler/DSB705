@@ -1,6 +1,6 @@
 import streamlit as st
 import base64, time, re, os
-from google import genai
+from groq import Groq
 
 st.set_page_config(
     page_title="MediPulse AI",
@@ -21,10 +21,10 @@ VIDEO  = load_asset("hero_video.mp4")
 # ── API KEY ───────────────────────────────────────────────────
 from dotenv import load_dotenv
 load_dotenv()
-API_KEY = os.getenv("GOOGLE_API_KEY")
+API_KEY = os.getenv("GROQ_API_KEY")
 if not API_KEY:
     try:
-        API_KEY = st.secrets.get("GOOGLE_API_KEY")
+        API_KEY = st.secrets.get("GROQ_API_KEY")
     except Exception:
         API_KEY = None
 
@@ -185,19 +185,19 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown("<div style='font-size:12px;color:#7A90AB;margin-bottom:6px'>Google API Key</div>", unsafe_allow_html=True)
-    key_input = st.text_input("", placeholder="AIzaSy...", type="password", label_visibility="collapsed")
+    st.markdown("<div style='font-size:12px;color:#7A90AB;margin-bottom:6px'>Groq API Key (Free)</div>", unsafe_allow_html=True)
+    key_input = st.text_input("", placeholder="gsk_...", type="password", label_visibility="collapsed")
 
-    if st.button("🔑 Connect"):
+    if st.button("🔑 Connect Groq"):
         if len(key_input) > 20:
-            st.session_state.api_key  = key_input
+            st.session_state.api_key = key_input
             st.session_state.connected = True
             st.success("✅ Connected!")
         else:
             st.error("❌ Invalid key")
 
     if st.session_state.connected:
-        st.markdown("<div style='background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.3);border-radius:6px;padding:8px 12px;font-size:12px;color:#6EE7B7'>🟢 Gemini AI Active</div>", unsafe_allow_html=True)
+        st.markdown("<div style='background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.3);border-radius:6px;padding:8px 12px;font-size:12px;color:#6EE7B7'>🟢 Groq AI Active</div>", unsafe_allow_html=True)
     else:
         st.markdown("<div style='background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);border-radius:6px;padding:8px 12px;font-size:12px;color:#FDE68A'>🟡 Demo mode</div>", unsafe_allow_html=True)
 
@@ -205,9 +205,9 @@ with st.sidebar:
     st.markdown("""
     <div style='font-size:12px;color:#7A90AB;font-family:"DM Sans",sans-serif;line-height:1.9'>
     <strong style='color:#B8CADE'>Get free key:</strong><br>
-    <a href='https://aistudio.google.com/apikey' target='_blank' style='color:#14B8A6'>aistudio.google.com/apikey</a><br><br>
+    <a href='https://console.groq.com' target='_blank' style='color:#14B8A6'>console.groq.com</a><br><br>
     <strong style='color:#B8CADE'>Streamlit Secrets:</strong><br>
-    <code style='color:#14B8A6'>GOOGLE_API_KEY = "AIzaSy..."</code>
+    <code style='color:#14B8A6'>GOOGLE_API_KEY = "gsk_..."</code>
     </div>
     """, unsafe_allow_html=True)
 
@@ -247,25 +247,26 @@ STYLE: Warm NHS tone. Max 200 words. Bullet points. End with NHS service or help
 
 def call_ai(user_msg):
     try:
-        client = genai.Client(api_key=st.session_state.api_key)
-        # Build conversation history as text
-        history_parts = []
+        client = Groq(api_key=st.session_state.api_key)
+        messages = [{"role": "system", "content": build_prompt()}]
         for m in st.session_state.messages[:-1]:
-            role = "User" if m["role"] == "user" else "Florence"
-            history_parts.append(f"{role}: {m['content']}")
-        history_text = "\n".join(history_parts)
-        full_contents = f"{history_text}\nUser: {user_msg}" if history_text else user_msg
-        response = client.models.generate_content(
-            model="gemini-2.0-flash",
-            config={"system_instruction": build_prompt()},
-            contents=full_contents
+            messages.append({
+                "role": m["role"] if m["role"] == "user" else "assistant",
+                "content": m["content"]
+            })
+        messages.append({"role": "user", "content": user_msg})
+        response = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=messages,
+            max_tokens=600,
+            temperature=0.7
         )
-        return response.text
+        return response.choices[0].message.content
     except Exception as e:
         err = str(e)
-        if "429" in err or "quota" in err.lower():
-            return "⚠️ API quota reached. Please wait a moment and try again.\n\nEmergency: **call 999** | Urgent: **call 111** | Mental health: **Samaritans 116 123**"
-        return f"⚠️ Connection error. Please check your API key in the sidebar.\n\nEmergency: **999** | Urgent: **111** | Mental health: **116 123**"
+        if "429" in err or "rate" in err.lower():
+            return "⚠️ Rate limit reached. Please wait a moment and try again.\n\nEmergency: **call 999** | Urgent: **call 111** | Mental health: **Samaritans 116 123**"
+        return f"⚠️ Connection error: {err}\n\nEmergency: **999** | Urgent: **111** | Mental health: **116 123**"
 
 def fallback(msg):
     m = msg.lower()
@@ -350,7 +351,7 @@ st.markdown(f"""
       <div class="trust-row">
         <span class="trust-lbl">Aligned with</span>
         <span class="tc">NHS England</span><span class="tc">NICE Guidelines</span>
-        <span class="tc">NHS 111</span><span class="tc">MHRA · BNF</span><span class="tc">Gemini AI</span>
+        <span class="tc">NHS 111</span><span class="tc">MHRA · BNF</span><span class="tc">Groq AI</span>
       </div>
     </div>
     <div class="hero-mascot-wrap">
@@ -435,7 +436,7 @@ st.markdown('<div id="chatbot" class="sec-wrap-dk">', unsafe_allow_html=True)
 col_info, col_chat = st.columns([1, 1.2], gap="large")
 
 with col_info:
-    status_txt = "Gemini 1.5 Flash" if st.session_state.connected else "Demo Mode"
+    status_txt = "Groq LLaMA 3.3" if st.session_state.connected else "Demo Mode"
     status_col = "#6EE7B7" if st.session_state.connected else "#FCD34D"
     st.markdown(f"""
     <div class="sec-tag">Gemini AI Powered</div>
@@ -444,7 +445,7 @@ with col_info:
     <div class="pill-row">
       <span class="pill pill-nhs">✓ NHS 111</span><span class="pill pill-teal">✓ NICE</span>
       <span class="pill pill-red">✓ Emergency Detection</span><span class="pill">✓ BNF Medicines</span>
-      <span class="pill">✓ Mental Health</span><span class="pill pill-nhs">✓ Gemini AI</span>
+      <span class="pill">✓ Mental Health</span><span class="pill pill-nhs">✓ Groq Free AI</span>
     </div>
     <div style="margin-top:20px;background:#1A2840;border:1px solid #253650;border-radius:10px;padding:14px">
       <div style="font-size:12px;color:#7A90AB;margin-bottom:5px">Status</div>
@@ -459,7 +460,7 @@ with col_chat:
         <img src="data:image/png;base64,{MASCOT}" class="chat-av-img" alt="Florence"/>
         <div>
           <div class="chat-hname">Florence · MediPulse AI</div>
-          <div class="chat-hstatus">Active now · {'Gemini AI' if st.session_state.connected else 'Demo'}</div>
+          <div class="chat-hstatus">Active now · {'Groq LLaMA 3.3' if st.session_state.connected else 'Demo'}</div>
         </div>
         <div class="nhs-v">✓ NHS Aligned</div>
       </div>
@@ -619,7 +620,7 @@ st.markdown(f"""
         <span class="footer-badge">NHS Aligned</span>
         <span class="footer-badge">NICE Guidelines</span>
         <span class="footer-badge">GDPR Compliant</span>
-        <span class="footer-badge">Gemini AI</span>
+        <span class="footer-badge">Groq AI</span>
       </div>
     </div>
     <div class="footer-col">
