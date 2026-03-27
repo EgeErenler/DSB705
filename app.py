@@ -284,20 +284,46 @@ def call_ai(user_msg):
 
 def fallback(msg):
     m = msg.lower()
-    if any(w in m for w in ["chest pain","heart attack","stroke","can't breathe"]):
-        return "🚨 **Please call 999 immediately.**\n\nChest pain can be life-threatening. Don't wait.\n\n• Sit down and rest\n• Loosen tight clothing\n• If no aspirin allergy: chew 300mg aspirin\n\nStay on the line with 999."
-    if any(w in m for w in ["suicid","kill myself","self harm","end my life"]):
-        return "💙 I'm glad you reached out. You are not alone.\n\n**Call Samaritans: 116 123** (free, 24/7)\n\nText SHOUT to 85258 or go to your nearest A&E if unsafe."
-    if any(w in m for w in ["gp","register","doctor"]):
-        return "To register with an NHS GP:\n\n• Visit **nhs.uk/service-search** → search by postcode\n• Every UK resident can register free of charge\n• No NHS number needed to first register"
-    if any(w in m for w in ["ibuprofen","paracetamol","aspirin","medication"]):
-        return "**NHS Medication Info (BNF):**\n\n**Paracetamol:** 500mg–1g every 4–6hrs. Max 4g/day.\n\n**Ibuprofen:** 400mg every 6–8hrs with food. Avoid if asthma or pregnant.\n\nYour NHS pharmacist gives free advice — no appointment needed."
-    if any(w in m for w in ["anxious","anxiety","depress","mental health","stress"]):
-        return "💙 Thank you for sharing that.\n\n**Free NHS support:**\n• **IAPT:** nhs.uk/talking-therapies (free CBT)\n• **Samaritans:** 116 123 (24/7 free)\n• **Mind:** 0300 123 3393 (Mon–Fri 9–6)"
     p = st.session_state.profile
+
+    # Emergency always first
+    if any(w in m for w in ["chest pain","heart attack","stroke","can't breathe","difficulty breathing"]):
+        return "🚨 **Please call 999 immediately.**\n\nChest pain or breathing difficulty can be life-threatening.\n\n**While waiting for the ambulance:**\n• Sit down and rest — do not exert yourself\n• Loosen any tight clothing\n• If you have 300mg aspirin and are not allergic: chew it slowly\n• Stay on the line with 999\n\nDo NOT drive yourself to A&E."
+
+    if any(w in m for w in ["suicid","kill myself","self harm","end my life"]):
+        return "💙 I'm really glad you reached out. You are not alone.\n\n**Please call Samaritans now: 116 123** (free, 24/7, confidential)\n\n• Text SHOUT to 85258 for free crisis text support\n• Go to your nearest A&E if you feel unsafe right now\n• Call 999 if in immediate danger"
+
+    # Headache
+    if any(w in m for w in ["headache","head pain","migraine","head hurts"]):
+        return "**Headache guidance (NHS):**\n\n**Possible causes:**\n• Tension headache — most common, feels like pressure around forehead\n• Dehydration — drink water first\n• Migraine — throbbing, often one side, with nausea or light sensitivity\n• Sinusitis — pressure around face and nose\n\n**Self-care:**\n• Paracetamol 500mg–1g or ibuprofen 400mg (with food)\n• Rest in a quiet, dark room if migraine\n• Stay hydrated\n\n**See a GP if:**\n• Headache is the worst of your life (sudden, severe)\n• Fever, stiff neck, rash alongside headache\n• Lasts more than a few days\n• Affects your vision\n\n**Sudden severe headache: call 999 immediately** — could be a sign of a brain bleed.\n\nNHS 111 can advise further: call **111** or visit **111.nhs.uk**"
+
+    # Back pain
+    if any(w in m for w in ["back pain","backache","back ache","spine"]):
+        return "**Back pain guidance (NHS):**\n\nMost back pain gets better within a few weeks.\n\n**Self-care:**\n• Stay as active as possible — rest makes it worse\n• Paracetamol 500mg–1g every 4–6hrs (max 4g/day) or ibuprofen 400mg with food\n• Heat pack on the affected area\n• Gentle stretching\n\n**See your GP if:**\n• Pain after an injury or fall\n• Pain with numbness/tingling in legs\n• Bladder or bowel changes\n• Unexplained weight loss\n• Pain that doesn't improve after 6 weeks\n\nVisit your NHS GP: **nhs.uk/service-search**"
+
+    # Cold/flu
+    if any(w in m for w in ["cold","flu","cough","fever","temperature","sore throat","runny nose"]):
+        return "**Cold & Flu guidance (NHS):**\n\n**Self-care (usually get better in 1–2 weeks):**\n• Rest and drink plenty of fluids\n• Paracetamol 500mg–1g every 4–6hrs for fever/aches\n• Ibuprofen 400mg with food (not if asthma)\n• Honey and lemon for sore throat (not under 1 year old)\n• Saline nasal spray for blocked nose\n\n**Do NOT take antibiotics** — colds and flu are viral.\n\n**See a GP or call 111 if:**\n• Symptoms get much worse suddenly\n• High fever that doesn't reduce\n• Difficulty breathing\n• Symptoms last more than 3 weeks\n\nCall **NHS 111** for urgent advice."
+
+    # GP
+    if any(w in m for w in ["gp","register","find a doctor","find a gp"]):
+        return "**Registering with an NHS GP:**\n\n• Every UK resident has the legal right to register free of charge\n• Visit **nhs.uk/service-search** → search by postcode\n• No NHS number needed to first register\n• Bring photo ID and proof of address if possible\n\n**Once registered:**\n• Download the **NHS App** (iOS/Android) to book appointments\n• Order repeat prescriptions online\n• View test results and your health record"
+
+    # Medication
+    if any(w in m for w in ["ibuprofen","paracetamol","aspirin","medication","medicine","drug","dose","tablet"]):
+        return "**NHS Medication Info (BNF):**\n\n**Paracetamol:**\n• 500mg–1g every 4–6 hours\n• Maximum 4g per day (8 standard tablets)\n• Safe with food, suitable for most people\n\n**Ibuprofen:**\n• 400mg every 6–8 hours with food\n• Avoid if: asthma, kidney problems, stomach ulcers, pregnant\n• Do not exceed 1200mg/day without GP advice\n\n**Aspirin (300mg):**\n• Not for pain relief in under 16s\n• Used in heart attack: chew one 300mg tablet if no allergy\n\n**Free advice:** Your NHS pharmacist can advise without an appointment."
+
+    # Anxiety/mental health
+    if any(w in m for w in ["anxious","anxiety","depress","sad","low mood","mental health","stress","worried","panic"]):
+        return "💙 Thank you for sharing that — it takes courage.\n\n**Free NHS mental health support:**\n• **IAPT Talking Therapies:** Self-refer at nhs.uk/talking-therapies (free CBT and counselling)\n• **Every Mind Matters:** nhs.uk/every-mind-matters (personalised action plan)\n• **Samaritans:** 116 123 (free, 24/7, confidential)\n• **Mind:** 0300 123 3393 (Mon–Fri 9am–6pm)\n\n**Crisis:** If you feel unsafe, call 999 or go to A&E."
+
+    # Profile not started
     if not p["name"]:
-        return "Hello! I'm Florence, your MediPulse AI health assistant 👋\n\nI'm here to help with symptoms, medicines, finding a GP, and NHS guidance.\n\nMay I ask your first name to get started?"
-    return f"Thank you{', '+p['name'] if p['name'] else ''}! How can I help?\n\n• 🩺 Symptoms & when to seek help\n• 💊 Medicines (BNF)\n• 🏥 Finding a GP\n• 🧠 Mental health support\n• 📋 NICE guidelines"
+        return "Hello! I'm Florence, your MediPulse AI health assistant 👋\n\nI'm here to help with NHS health questions — symptoms, medicines, finding a GP, and more.\n\n**To personalise your care, may I ask your first name?**"
+
+    # Generic helpful response
+    name = p['name'] or ''
+    return f"Thank you{', '+name if name else ''}! I can help with that.\n\nCould you tell me a bit more? For example:\n• What symptoms are you experiencing?\n• How long have you had this?\n• Is it getting better or worse?\n\nThe more detail you share, the better I can guide you to the right NHS service. 💙"
 
 def update_profile(msg):
     p = st.session_state.profile
@@ -513,9 +539,15 @@ with col_chat:
             if st.button(quick[i][0], key=f"q{i}"):
                 st.session_state._quick = quick[i][1]
 
+    # Input clear trick
+    if "input_key" not in st.session_state:
+        st.session_state.input_key = 0
+
     icol, bcol = st.columns([5,1])
     with icol:
-        user_input = st.text_input("", placeholder="Type your health question...", key="chat_in", label_visibility="collapsed")
+        user_input = st.text_input("", placeholder="Type your health question...",
+                                   key=f"chat_in_{st.session_state.input_key}",
+                                   label_visibility="collapsed")
     with bcol:
         send = st.button("Send →", key="send_btn")
 
@@ -531,6 +563,8 @@ if send and user_input and user_input.strip():
     txt = user_input.strip()
     st.session_state.messages.append({"role":"user","content":txt})
     update_profile(txt)
+    # Clear input by changing key
+    st.session_state.input_key += 1
     with st.spinner("Florence is thinking..."):
         if st.session_state.connected and st.session_state.api_key:
             reply = call_ai(txt)
